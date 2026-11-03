@@ -1,5 +1,6 @@
 package com.griffith.travelogue
 
+import android.content.Intent
 import android.R.attr.onClick
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -45,7 +46,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TravelogueTheme {
-                HomeScreen()
+                HomeScreen(
+                    onCreateTripClick = {
+                        val intent = Intent(this,
+                            CreateTripActivity::class.java)
+
+                        startActivity(intent)
+                    }
+                )
             }
         }
     }
@@ -53,7 +61,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 
-fun HomeScreen(){
+fun HomeScreen(
+    onCreateTripClick: () -> Unit
+){
 
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
@@ -121,7 +131,7 @@ fun HomeScreen(){
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    Button(onClick = {},
+                    Button(onClick = onCreateTripClick,
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                         shape = RoundedCornerShape(12.dp)){
