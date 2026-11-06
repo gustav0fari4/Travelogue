@@ -1,5 +1,6 @@
 package com.griffith.travelogue
 
+import android.content.Intent
 import android.R.attr.text
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -175,7 +176,26 @@ fun CreateTripScreen() {
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        Button(onClick = { },
+        Button(onClick = {
+
+            if(tripName.isNotBlank() &&
+                country.isNotBlank() &&
+                city.isNotBlank() &&
+                startDate.isNotBlank() &&
+                endDate.isNotBlank()
+                ){
+                val intent = Intent(activity, TripDashboardActivity::class.java)
+
+                intent.putExtra("tripName", tripName)
+                intent.putExtra("country", country)
+                intent.putExtra("city", city)
+                intent.putExtra("startDate", startDate)
+                intent.putExtra("endDate", endDate)
+                intent.putExtra("notes", notes)
+
+                activity?.startActivity(intent)
+            }
+        },
             modifier = Modifier.fillMaxWidth()
                 .height(52.dp),
             colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
