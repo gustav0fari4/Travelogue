@@ -1,5 +1,6 @@
 package com.griffith.travelogue
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
@@ -140,10 +141,6 @@ fun TripDashboardScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = notes,
-            color = secondaryTextColor,
-            fontSize = 15.sp)
-
         // Itinerary card
         Card(modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -168,8 +165,16 @@ fun TripDashboardScreen(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 Button(onClick = {
-                    // Itinerary navigation will be added next.
+
+                    val intent = Intent(activity, ItineraryActivity::class.java)
+
+                    intent.putExtra("tripName", tripName)
+                    intent.putExtra("startDate", startDate)
+                    intent.putExtra("endDate", endDate)
+
+                    activity?.startActivity(intent)
                 },
+
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                     shape = RoundedCornerShape(12.dp)){
