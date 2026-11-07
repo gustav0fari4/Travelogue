@@ -213,7 +213,13 @@ fun TripDashboardScreen(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 Button(onClick = {
-                // Places navigation will be added later
+                    val intent = Intent(activity, PlacesActivity::class.java)
+
+                    intent.putExtra("tripName", tripName)
+                    intent.putExtra("city", city)
+                    intent.putExtra("country", country)
+
+                    activity?.startActivity(intent)
                 },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
