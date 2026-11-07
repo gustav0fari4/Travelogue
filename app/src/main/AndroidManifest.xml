@@ -24,6 +24,9 @@
             android:exported="false"/>
         <activity android:name=".AddPlaceActivity"
             android:exported="false"/>
+        <activity android:name=".PlaceDetailsActivity"
+            android:exported="false"/>
+
 
 
 

@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.clickable
 import com.griffith.travelogue.ui.theme.TravelogueTheme
 
 class PlacesActivity : ComponentActivity(){
@@ -221,7 +222,18 @@ fun PlacesScreen(tripName:String,
         } else {
             // Created place
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                                    .clickable{
+                                        val intent = Intent(activity, PlaceDetailsActivity::class.java)
+                                            intent.putExtra("placeName", placeName)
+                                            intent.putExtra("placeCategory", placeCategory)
+                                            intent.putExtra("placeCity", placeCity)
+                                            intent.putExtra("country", country)
+                                            intent.putExtra("placeAddress", placeAddress)
+                                            intent.putExtra("placeNotes", placeNotes)
+
+                                            activity?.startActivity(intent)
+                                    },
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
