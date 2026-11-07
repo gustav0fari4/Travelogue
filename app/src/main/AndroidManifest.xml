@@ -11,12 +11,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Travelogue">
+
         <activity android:name=".CreateTripActivity"
             android:exported="false"/>"
         <activity android:name=".TripDashboardActivity"
             android:exported="false"/>
         <activity android:name=".ItineraryActivity"
             android:exported="false"/>
+        <activity android:name=".AddActivityActivity"
+            android:exported="false"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

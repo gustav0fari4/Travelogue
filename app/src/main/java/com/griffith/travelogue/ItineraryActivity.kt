@@ -1,5 +1,6 @@
 package com.griffith.travelogue
 
+import android.R.attr.text
 import android.app.ProgressDialog.show
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -38,6 +39,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.griffith.travelogue.ui.theme.TravelogueTheme
+import android.app.Activity
+import android.content.Intent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 class ItineraryActivity : ComponentActivity(){
 
@@ -69,10 +78,35 @@ fun ItineraryScreen(tripName:String,
 
     val activity = LocalActivity.current
 
+    var activityTitle by remember { mutableStateOf("") }
+    var activityDate by remember { mutableStateOf("") }
+    var activityTime by remember { mutableStateOf("") }
+    var activityNotes by remember { mutableStateOf("") }
+
+    val addActivityLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
+
+        if (result.resultCode == Activity.RESULT_OK) {
+
+            result.data?.let { data ->
+
+                activityTitle = data.getStringExtra("activityTitle") ?: ""
+                activityDate = data.getStringExtra("activityDate") ?: ""
+                activityTime = data.getStringExtra("activityTime") ?: ""
+                activityNotes = data.getStringExtra("activityNotes") ?: ""
+            }
+        }
+    }
+
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
     val titleColor = Color(0xFF1D2939)
     val secondaryTextColor = Color(0xFF667085)
+
+    fun openAddActivityScreen(){
+        val intent = Intent(activity, AddActivityActivity::class.java)
+
+        addActivityLauncher.launch(intent)
+    }
 
     Column(modifier = Modifier.fillMaxSize()
         .background(backgroundColor)
@@ -80,7 +114,7 @@ fun ItineraryScreen(tripName:String,
         .navigationBarsPadding()
         .padding(start = 24.dp, top = 56.dp, end = 24.dp, bottom = 32.dp)
     ){
-        // Back + title
+
         Row(modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ){
@@ -127,49 +161,115 @@ fun ItineraryScreen(tripName:String,
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Empty itinerary
-        Card(modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ){
-            Column(modifier = Modifier.fillMaxWidth().padding(28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+
+        if(activityTitle.isBlank()){
+            // Empty itinerary
+            Card(modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ){
-                Text(text = "📅",
-                    fontSize = 40.sp
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Text(text = "No activities yet",
-                    color = titleColor,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(text = "Starting building your itinerary by adding activities to your trip.",
-                    color = secondaryTextColor,
-                    fontSize = 15.sp,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(onClick = {
-                    // Add activity navigation will implemented next
-                },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
-                    shape = RoundedCornerShape(12.dp)
+                Column(modifier = Modifier.fillMaxWidth().padding(28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ){
-                    Text(text = "ADD ACTIVITY",
-                        color = Color.White,
+                    Text(text = "📅",
+                        fontSize = 40.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(text = "No activities yet",
+                        color = titleColor,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(text = "Starting building your itinerary by adding activities to your trip.",
+                        color = secondaryTextColor,
+                        fontSize = 15.sp,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(onClick = {
+                        openAddActivityScreen()
+                    },
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "ADD ACTIVITY",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        } else {
+            // Created activity
+            Card(modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ){
+                Column(modifier = Modifier.fillMaxWidth().padding(22.dp),){
+                    Text(text = activityDate,
+                        color = primaryBlue,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(text = activityTime,
+                        color = secondaryTextColor,
+                        fontSize = 14.sp,
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(text = activityTitle,
+                        color = titleColor,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    if(activityNotes.isNotBlank()){
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(text = activityNotes,
+                            color = secondaryTextColor,
+                            fontSize = 14.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(text= "PLANNED",
+                        color = primaryBlue,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(onClick = {
+                openAddActivityScreen()
+            },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                shape = RoundedCornerShape(12.dp)
+            ){
+                Text(text = "+ ADD ACTIVITY",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
