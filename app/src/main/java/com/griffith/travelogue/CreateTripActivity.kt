@@ -114,7 +114,7 @@ fun CreateTripScreen() {
         OutlinedTextField(value = tripName,
             onValueChange = { tripName = it },
             label = { Text("Trip Name") },
-            placeholder = {Text("e.g. Rome Adventure") },
+            placeholder = {Text("e.g. Japan Holiday") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
             modifier = Modifier.fillMaxWidth()
@@ -125,7 +125,7 @@ fun CreateTripScreen() {
         OutlinedTextField(value = country,
             onValueChange = { country = it },
             label = { Text("Country") },
-            placeholder = {Text("e.g. Italy") },
+            placeholder = {Text("e.g. Japan") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
             modifier = Modifier.fillMaxWidth()
@@ -136,7 +136,7 @@ fun CreateTripScreen() {
         OutlinedTextField(value = city,
             onValueChange = { city = it },
             label = { Text("City") },
-            placeholder = {Text("e.g. Rome") },
+            placeholder = {Text("e.g. Tokyo") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
             modifier = Modifier.fillMaxWidth()

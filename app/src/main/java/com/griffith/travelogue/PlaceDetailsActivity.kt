@@ -1,6 +1,7 @@
 package com.griffith.travelogue
 
 import android.R.attr.fontWeight
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
@@ -80,7 +81,8 @@ fun PlaceDetailsScreen(placeName: String,
     val secondaryTextColor = Color(0xFF667085)
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .background(backgroundColor)
             .verticalScroll(rememberScrollState())
             .navigationBarsPadding()
@@ -144,7 +146,9 @@ fun PlaceDetailsScreen(placeName: String,
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(22.dp)) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(22.dp)) {
                 Text(
                     text = "STATUS",
                     color = secondaryTextColor,
@@ -207,9 +211,28 @@ fun PlaceDetailsScreen(placeName: String,
 
         Button(
             onClick = {
-                // Implicit Share Intent will be implemented next.
+
+                val shareText = """
+                    $placeName
+                    $placeCategory in $placeCity, $country
+
+                    Saved to my Travelogue trip.
+                """.trimIndent()
+
+                val sendIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, shareText)
+                }
+
+                val chooserIntent = Intent.createChooser(sendIntent, "Share place")
+
+                activity?.startActivity(chooserIntent)
+
             },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
             colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
             shape = RoundedCornerShape(12.dp)
         ) {
