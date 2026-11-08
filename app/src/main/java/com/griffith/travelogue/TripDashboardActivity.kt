@@ -42,6 +42,7 @@ class TripDashboardActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
+        // Receives the trip information created in CreateTripActivity.
         val tripName = intent.getStringExtra("tripName") ?: ""
         val country = intent.getStringExtra("country") ?: ""
         val city = intent.getStringExtra("city") ?: ""
@@ -64,6 +65,8 @@ class TripDashboardActivity : ComponentActivity() {
     }
 }
 
+// Displays the main dashboard for the current trip
+// and provides navigation to Itinerary and Places.
 @Composable
 fun TripDashboardScreen(
     tripName: String,
@@ -75,11 +78,14 @@ fun TripDashboardScreen(
 ) {
     val activity = LocalActivity.current
 
+    // Shared colours keep the dashboard consistent
+    // with the rest of the Travelogue interface.
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
     val titleColor = Color(0xFF1D2939)
     val secondaryTextColor = Color(0xFF444444)
 
+    // Main scrollable layout for the Trip Dashboard.
     Column(modifier = Modifier.fillMaxSize()
         .background(backgroundColor)
         .verticalScroll(rememberScrollState())
@@ -109,6 +115,7 @@ fun TripDashboardScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
+        // Displays the main information for the current trip.
         // Trip Name
         Text(text = tripName.uppercase(),
             color = titleColor,
@@ -138,7 +145,7 @@ fun TripDashboardScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Itinerary card
+        // Provides access to the trip itinerary and planned activities.
         Card(modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -163,6 +170,8 @@ fun TripDashboardScreen(
 
                 Button(onClick = {
 
+                    // Passes the current trip context to ItineraryActivity
+                    // so activities remain associated with the correct trip.
                     val intent = Intent(activity, ItineraryActivity::class.java).apply{
                         putExtra("tripName", tripName)
                         putExtra("city", city)
@@ -188,7 +197,7 @@ fun TripDashboardScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Places card
+        // Provides access to manually added and visited Places.
         Card(modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -212,6 +221,7 @@ fun TripDashboardScreen(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 Button(onClick = {
+                    // Passes the trip identity and destination to PlacesActivity.
                     val intent = Intent(activity, PlacesActivity::class.java)
 
                     intent.putExtra("tripName", tripName)
@@ -232,6 +242,7 @@ fun TripDashboardScreen(
             }
         }
 
+        // Displays trip notes only when the user provided them.
         if (notes.isNotBlank()){
 
             Spacer(modifier = Modifier.height(32.dp))

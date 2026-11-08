@@ -49,6 +49,7 @@ class AddPlaceActivity : ComponentActivity(){
 
         enableEdgeToEdge()
 
+        // Receives the trip city so the form can be pre-filled for the user.
         val defaultCity = intent.getStringExtra("city") ?: ""
 
         setContent {
@@ -64,11 +65,13 @@ fun AddPlaceScreen(defaultCity: String){
 
     val activity = LocalActivity.current
 
+    // App colours used to keep the form consistent with the other screens.
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
     val secondaryTextColor = Color(0xFF444444)
     val inputTextColor = Color(0xFF1D2939)
 
+    // Shared input styling improves readability and keeps all form fields consistent.
     val textFieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = inputTextColor,
         unfocusedTextColor = inputTextColor,
@@ -85,14 +88,15 @@ fun AddPlaceScreen(defaultCity: String){
         cursorColor = primaryBlue
     )
 
+    // Stores the values entered by the user in the Add Place form.
     var placeName by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
     var city by remember { mutableStateOf(defaultCity) }
     var address by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
+    // Main scrollable layout for the Add Place screen.
     Column(modifier = Modifier.fillMaxSize()
-        .fillMaxSize()
         .background(backgroundColor)
         .verticalScroll(rememberScrollState())
         .navigationBarsPadding()
@@ -101,6 +105,7 @@ fun AddPlaceScreen(defaultCity: String){
         Row(modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ){
+            // Returns to the Places screen without saving a new place.
             TextButton(onClick = { activity?.finish() }){
                 Text(text = "←",
                     color = primaryBlue,
@@ -150,6 +155,7 @@ fun AddPlaceScreen(defaultCity: String){
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // The city is pre-filled from the current trip but can still be edited.
         OutlinedTextField(value = city,
             onValueChange = { city = it },
             label = { Text("City") },
@@ -187,6 +193,7 @@ fun AddPlaceScreen(defaultCity: String){
 
         Spacer(modifier = Modifier.height(28.dp))
 
+        // Packages the new place data and returns it to PlacesActivity.
         Button(onClick = {
             if(placeName.isNotBlank() &&
                 category.isNotBlank() &&
@@ -201,6 +208,7 @@ fun AddPlaceScreen(defaultCity: String){
                 resultIntent.putExtra("placeAddress", address)
                 resultIntent.putExtra("placeNotes", notes)
 
+                // Sends the place back to the previous screen and closes this screen.
                 activity?.setResult(Activity.RESULT_OK, resultIntent)
                 activity?.finish()
             }

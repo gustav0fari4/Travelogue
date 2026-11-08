@@ -1,6 +1,5 @@
 package com.griffith.travelogue
 
-import android.R.attr.country
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
@@ -38,10 +37,6 @@ import android.app.Activity
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
 import com.griffith.travelogue.ui.theme.TravelogueTheme
 
@@ -52,6 +47,7 @@ class PlacesActivity : ComponentActivity(){
 
         enableEdgeToEdge()
 
+        // Receives the current trip information from TripDashboardActivity.
         val tripName = intent.getStringExtra("tripName") ?: ""
         val city = intent.getStringExtra("city") ?: ""
         val country = intent.getStringExtra("country") ?: ""
@@ -81,13 +77,15 @@ fun PlacesScreen(tripName:String,
     val titleColor = Color(0xFF1D2939)
     val secondaryTextColor = Color(0xFF444444)
 
+    // Retrieves only the places associated with the current trip.
     val tripPlaces = TravelogueStore.placesForTrip(tripName)
 
+    // Opens AddPlaceActivity and receives the completed
+    // place information when the user returns to this screen.
     val addPlaceLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let {
                 data ->
-
 
                 val placeName = data.getStringExtra("placeName").orEmpty()
                 val placeCategory = data.getStringExtra("placeCategory").orEmpty()
@@ -95,6 +93,8 @@ fun PlacesScreen(tripName:String,
                 val placeAddress = data.getStringExtra("placeAddress").orEmpty()
                 val placeNotes = data.getStringExtra("placeNotes").orEmpty()
 
+                // Creates a new manual Place with the initial
+                // status WANT TO VISIT and stores it in TravelogueStore.
                 if(placeName.isNotBlank()){
                     TravelogueStore.addPlace(
                         TravelPlace(tripName = tripName,
@@ -112,6 +112,7 @@ fun PlacesScreen(tripName:String,
         }
     }
 
+    // Opens the Add Place form and pre-fills the current trip city.
     fun openAddPlaceScreen() {
         val intent = Intent(activity, AddPlaceActivity::class.java)
 
@@ -120,6 +121,7 @@ fun PlacesScreen(tripName:String,
         addPlaceLauncher.launch(intent)
     }
 
+    // Main scrollable layout for the Places screen.
     Column(
         modifier = Modifier.fillMaxSize()
             .background(backgroundColor)
@@ -131,6 +133,7 @@ fun PlacesScreen(tripName:String,
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Returns to the Trip Dashboard.
             TextButton(onClick = { activity?.finish() }) {
                 Text(
                     text = "←",
@@ -152,7 +155,7 @@ fun PlacesScreen(tripName:String,
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        //Trip information
+        // Displays the current trip and destination information.
         Text(
             text = tripName.uppercase(),
             color = titleColor,
@@ -180,14 +183,15 @@ fun PlacesScreen(tripName:String,
         Spacer(modifier = Modifier.height(16.dp))
 
         if (tripPlaces.isEmpty()) {
-            // Empty places state
+            // Shows an empty state when the trip has no manual
+            // or automatically generated places.
             EmptyPlacesCard(primaryBlue = primaryBlue,
                 titleColor = titleColor,
                 secondaryTextColor = secondaryTextColor,
                 onAddPlace = { openAddPlaceScreen() }
             )
         } else {
-            // Existing places
+            // Displays every Place associated with the current trip.
             tripPlaces.forEach {
                 travelPlace -> PlaceCard(travelPlace = travelPlace,
                     primaryBlue = primaryBlue,
@@ -195,11 +199,13 @@ fun PlacesScreen(tripName:String,
                     titleColor = titleColor,
                     secondaryTextColor = secondaryTextColor,
                     onOpenPlace = {
+                        // Passes the selected Place information
+                        // to the Place Details screen.
                         val intent = Intent(activity, PlaceDetailsActivity::class.java).apply{
                                 putExtra("placeName", travelPlace.name)
                                 putExtra("placeCategory", travelPlace.category)
                                 putExtra("placeCity", travelPlace.city)
-                                putExtra("country", country)
+                                putExtra("country", travelPlace.country)
                                 putExtra("placeAddress", travelPlace.address)
                                 putExtra("placeNotes", travelPlace.notes)
                                 putExtra("placeVisited", travelPlace.visited)
@@ -228,6 +234,8 @@ fun PlacesScreen(tripName:String,
     }
 }
 
+// Displays the initial Places state and allows
+// the user to add the first Place manually
 @Composable
 private fun EmptyPlacesCard(primaryBlue: Color,
                             titleColor: Color,
@@ -285,6 +293,8 @@ private fun EmptyPlacesCard(primaryBlue: Color,
     }
 }
 
+// Displays an individual Place and opens its
+// details when the card is selected.
 @Composable
 private fun PlaceCard(travelPlace: TravelPlace,
                       primaryBlue: Color,
@@ -292,6 +302,8 @@ private fun PlaceCard(travelPlace: TravelPlace,
                       titleColor: Color,
                       secondaryTextColor: Color,
                       onOpenPlace: () -> Unit){
+    // Makes the entire card selectable instead of requiring
+    // a separate Open Details button.
     Card(modifier = Modifier.fillMaxWidth().clickable { onOpenPlace() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -323,6 +335,7 @@ private fun PlaceCard(travelPlace: TravelPlace,
                 fontSize = 14.sp
             )
 
+            // Optional address and notes are displayed only when available.
             if(travelPlace.address.isNotBlank()){
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -343,6 +356,8 @@ private fun PlaceCard(travelPlace: TravelPlace,
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Uses green for visited places and blue for places
+            // that are still marked as WANT TO VISIT.
             Text(
                 text = if(travelPlace.visited){
                     "VISITED"

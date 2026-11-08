@@ -45,9 +45,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+// Defines the accepted year range for trip dates.
 private const val MINIMUM_TRIP_YEAR = 1900
 private const val MAXIMUM_TRIP_YEAR = 2100
 
+// Formats numeric input into DD/MM/YYYY.
+// Example: 10112026 becomes 10/11/2026.
 private fun formatTripDateInput(input: String): String {
 
     val digits = input
@@ -69,6 +72,8 @@ private fun formatTripDateInput(input: String): String {
     }
 }
 
+// Validates that the entered date is a real calendar date
+// and that the year is within the accepted range.
 private fun parseDate(date: String): Date? {
 
     if (date.length != 10) {
@@ -89,6 +94,8 @@ private fun parseDate(date: String): Date? {
         Locale.getDefault()
     )
 
+    // Prevents invalid dates such as 31/11/2026
+    // from being automatically corrected by the formatter.
     formatter.isLenient = false
 
     return try {
@@ -118,12 +125,15 @@ fun CreateTripScreen() {
 
     val activity = LocalActivity.current
 
+    // App colours used to keep the form consistent with the other screens.
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
     val secondaryTextColor = Color(0xFF444444)
     val inputTextColor = Color(0xFF1D2939)
     val errorColor = Color(0xFFB3261E)
 
+    // Shared styling for all form fields.
+    // Darker input colours improve readability on physical devices.
     val textFieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = inputTextColor,
         unfocusedTextColor = inputTextColor,
@@ -146,6 +156,7 @@ fun CreateTripScreen() {
         errorSupportingTextColor = errorColor
     )
 
+    // Stores the values entered by the user in the Create Trip form.
     var tripName by remember { mutableStateOf("") }
     var country by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
@@ -153,6 +164,9 @@ fun CreateTripScreen() {
     var endDate by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
+    // Parses and validates both travel dates.
+    // The trip cannot be created with invalid dates
+    // or when the end date is before the start date.
     val startDateParsed = parseDate(startDate)
     val endDateParsed = parseDate(endDate)
 
@@ -175,6 +189,7 @@ fun CreateTripScreen() {
                 endDateParsed != null &&
                 endDateParsed.before(startDateParsed)
 
+    // Controls when validation feedback is displayed to the user.
     val startDateHasError =
         startDateIsComplete &&
                 !startDateIsValid
@@ -191,11 +206,14 @@ fun CreateTripScreen() {
                 endDateIsValid &&
                 !endDateIsBeforeStartDate
 
+    // Enables trip creation only when all required fields
+    // and the complete travel date range are valid.
     val canCreateTrip = tripName.isNotBlank() &&
             country.isNotBlank() &&
             city.isNotBlank() &&
             dateRangeIsValid
 
+    // Main scrollable layout for the Create Trip screen.
     Column(
         modifier = Modifier.fillMaxSize()
             .background(backgroundColor)
@@ -207,6 +225,7 @@ fun CreateTripScreen() {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ){
+            // Returns to the previous screen without creating a trip.
             TextButton(onClick = {activity?.finish()}){
                 Text(text = "←",
                     color = primaryBlue,
@@ -268,6 +287,8 @@ fun CreateTripScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Start date input automatically adds "/" and shows
+        // an error when a complete but invalid date is entered.
         OutlinedTextField(value = startDate,
             onValueChange = { startDate = formatTripDateInput(it) },
             label = { Text("Start Date") },
@@ -295,6 +316,7 @@ fun CreateTripScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // End date also checks that it is not before the trip start date.
         OutlinedTextField(value = endDate,
             onValueChange = { endDate = formatTripDateInput(it) },
             label = { Text("End Date") },
@@ -345,9 +367,12 @@ fun CreateTripScreen() {
 
         Spacer(modifier = Modifier.height(28.dp))
 
+        // Creates the trip context and passes the entered data
+        // to TripDashboardActivity.
         Button(
             onClick = {
 
+                // Packages the trip information for the dashboard screen.
                 val intent = Intent(activity, TripDashboardActivity::class.java).apply {
                     putExtra("tripName", tripName.trim())
                     putExtra("country", country.trim())

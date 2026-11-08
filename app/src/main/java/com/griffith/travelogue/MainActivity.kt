@@ -1,7 +1,6 @@
 package com.griffith.travelogue
 
 import android.content.Intent
-import android.R.attr.onClick
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,7 +22,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,11 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.griffith.travelogue.ui.theme.TravelogueTheme
-import java.time.temporal.TemporalAdjusters.next
 
 class MainActivity : ComponentActivity() {
 
@@ -44,10 +40,13 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
+        // Loads the Travelogue home screen and defines
+        // the navigation action for creating a new trip.
         setContent {
             TravelogueTheme {
                 HomeScreen(
                     onCreateTripClick = {
+                        // Opens the Create Trip screen when the user starts a new trip.
                         val intent = Intent(this,
                             CreateTripActivity::class.java)
 
@@ -59,21 +58,25 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Displays the main entry screen of Travelogue.
+// The callback keeps navigation logic outside the UI component.
 @Composable
-
 fun HomeScreen(
     onCreateTripClick: () -> Unit
 ){
 
+    // Shared colours used to maintain visual consistency across the app.
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
     val titleColor = Color(0xFF1D2939)
     val secondaryTextColor = Color(0xFF444444)
 
+    // Main container for the Travelogue home screen.
     Box(modifier = Modifier
         .fillMaxSize()
         .background(backgroundColor)){
 
+        // Scrollable content keeps the screen usable on different device sizes.
         Column(modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
@@ -102,7 +105,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Empty state card
+            // Displays the initial empty state before the user creates a trip.
             Card(modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -131,6 +134,8 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // Starts the trip creation flow using the callback
+                    // provided by MainActivity.
                     Button(onClick = onCreateTripClick,
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),

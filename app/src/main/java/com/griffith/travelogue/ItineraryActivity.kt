@@ -38,7 +38,6 @@ import android.app.Activity
 import android.content.Intent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.rememberLauncherForActivityResult
-import com.griffith.travelogue.TravelogueStore.activities
 
 class ItineraryActivity : ComponentActivity(){
 
@@ -47,6 +46,7 @@ class ItineraryActivity : ComponentActivity(){
 
         enableEdgeToEdge()
 
+        // Receives the current trip information from TripDashboardActivity.
         val tripName = intent.getStringExtra("tripName") ?: ""
         val city = intent.getStringExtra("city") ?: ""
         val country = intent.getStringExtra("country") ?: ""
@@ -82,8 +82,11 @@ fun ItineraryScreen(tripName:String,
     val titleColor = Color(0xFF1D2939)
     val secondaryTextColor = Color(0xFF444444)
 
+    // Retrieves only the activities associated with the current trip.
     val tripActivities = TravelogueStore.activitiesForTrip(tripName)
 
+    // Opens AddActivityActivity and receives the completed
+    // activity data when the user returns to this screen.
     val addActivityLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
 
         if (result.resultCode == Activity.RESULT_OK) {
@@ -95,6 +98,8 @@ fun ItineraryScreen(tripName:String,
                 val time = data.getStringExtra("activityTime").orEmpty()
                 val notes = data.getStringExtra("activityNotes").orEmpty()
 
+                // Creates a new TravelActivity and stores it
+                // in the shared TravelogueStore.
                 if(title.isNotBlank()){
                     TravelogueStore.addActivity(
                         TravelActivity(tripName = tripName,
@@ -110,12 +115,14 @@ fun ItineraryScreen(tripName:String,
         }
     }
 
+    // Launches the Add Activity form and waits for a result.
     fun openAddActivityScreen(){
         val intent = Intent(activity, AddActivityActivity::class.java)
 
         addActivityLauncher.launch(intent)
     }
 
+    // Main scrollable layout for the Itinerary screen.
     Column(modifier = Modifier.fillMaxSize()
         .background(backgroundColor)
         .verticalScroll(rememberScrollState())
@@ -169,14 +176,15 @@ fun ItineraryScreen(tripName:String,
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
-        if(activities.isEmpty()){
+        // Shows an empty state until the first activity is added.
+        if(tripActivities.isEmpty()){
             EmptyItineraryCard(primaryBlue = primaryBlue,
                 titleColor = titleColor,
                 secondaryTextColor = secondaryTextColor,
                 onAddActivity = { openAddActivityScreen() }
             )
         } else {
+            // Displays every activity stored for the current trip.
             tripActivities.forEach{ travelActivity ->
 
                 ActivityCard(travelActivity = travelActivity,
@@ -185,6 +193,8 @@ fun ItineraryScreen(tripName:String,
                     titleColor = titleColor,
                     secondaryTextColor = secondaryTextColor,
                     onMarkAsVisited = {
+                        // Changes the activity status from PLANNED to VISITED.
+                        // TravelogueStore also creates a corresponding visited Place.
                         TravelogueStore.markActivityAsVisited(travelActivity.id)
                     }
                 )
@@ -208,6 +218,8 @@ fun ItineraryScreen(tripName:String,
     }
 }
 
+// Displays the empty itinerary state and provides
+// the first entry point for adding an activity.
 @Composable
 private fun EmptyItineraryCard(primaryBlue: Color,
                                 titleColor: Color,
@@ -266,6 +278,8 @@ private fun EmptyItineraryCard(primaryBlue: Color,
     }
 }
 
+// Displays an individual itinerary activity
+// and its current PLANNED or VISITED status.
 @Composable
 private fun ActivityCard(travelActivity: TravelActivity,
                          primaryBlue: Color,
@@ -273,6 +287,8 @@ private fun ActivityCard(travelActivity: TravelActivity,
                          titleColor: Color,
                          secondaryTextColor: Color,
                          onMarkAsVisited: () -> Unit) {
+    // Determines the visual state and whether
+    // the Mark as Visited action should still be available.
     val isVisited = travelActivity.status == ActivityStatus.VISITED
 
     Card(
@@ -325,13 +341,15 @@ private fun ActivityCard(travelActivity: TravelActivity,
                 fontWeight = FontWeight.Bold
             )
 
+            // Once visited, the activity keeps its history
+            // but the action button is no longer displayed.
             if (!isVisited){
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = onMarkAsVisited,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = visitedGreen),
                     shape = RoundedCornerShape(12.dp)
                 ){
                     Text(text = "MARK AS VISITED",

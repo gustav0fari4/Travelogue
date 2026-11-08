@@ -46,9 +46,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+// Defines the acceptable year range for activity dates.
 private const val MINIMUM_ACTIVITY_YEAR = 1900
 private const val MAXIMUM_ACTIVITY_YEAR = 2100
 
+// Formats numeric input into DD/MM/YYYY.
+// Example: 12112026 becomes 12/11/2026.
 private fun formatActivityDateInput(input: String): String {
 
     val digits = input
@@ -70,6 +73,8 @@ private fun formatActivityDateInput(input: String): String {
     }
 }
 
+// Validates that the activity date is a real calendar date
+// and that the year is within the accepted range.
 private fun parseActivityDate(date: String): Date? {
 
     if (date.length != 10) {
@@ -92,6 +97,8 @@ private fun parseActivityDate(date: String): Date? {
         Locale.getDefault()
     )
 
+    // Prevents invalid dates such as 31/11/2026
+    // from being automatically corrected by the formatter.
     formatter.isLenient = false
 
     return try {
@@ -101,6 +108,8 @@ private fun parseActivityDate(date: String): Date? {
     }
 }
 
+// Formats numeric input into HH:mm.
+// Example: 0930 becomes 09:30.
 private fun formatActivityTimeInput(input: String): String {
 
     val digits = input
@@ -136,12 +145,15 @@ fun AddActivityScreen(){
 
     val activity = LocalActivity.current
 
+    // App colours used to keep the form consistent with the other screens.
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
     val secondaryTextColor = Color(0xFF444444)
     val inputTextColor = Color(0xFF1D2939)
     val errorColor = Color(0xFFB3261E)
 
+    // Shared styling for all input fields on this screen.
+    // Darker input text improves readability on physical devices.
     val textFieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = inputTextColor,
         unfocusedTextColor = inputTextColor,
@@ -164,11 +176,13 @@ fun AddActivityScreen(){
         errorSupportingTextColor = errorColor
     )
 
+    // Stores the values entered by the user in the activity form.
     var activityTitle by remember { mutableStateOf("") }
     var activityDate by remember { mutableStateOf("") }
     var activityTime by remember { mutableStateOf("") }
     var activityNotes by remember { mutableStateOf("") }
 
+    // Validates the activity date before allowing the activity to be saved.
     val activityDateIsComplete =
         activityDate.length == 10
 
@@ -186,12 +200,14 @@ fun AddActivityScreen(){
     val activityTimeIsComplete =
         activityTime.length == 5
 
+    // The activity can only be added when all required fields are complete
+    // and the date has passed calendar validation.
     val canAddActivity =
         activityTitle.isNotBlank() &&
                 activityDateIsValid &&
                 activityTimeIsComplete
 
-
+    // Main scrollable layout for the Add Activity screen.
     Column(modifier = Modifier.fillMaxSize()
         .fillMaxSize()
         .background(backgroundColor)
@@ -203,6 +219,7 @@ fun AddActivityScreen(){
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ){
+            // Returns to the Itinerary screen without creating an activity.
             TextButton(onClick = { activity?.finish() }){
                 Text(text = "←",
                     color = primaryBlue,
@@ -240,6 +257,8 @@ fun AddActivityScreen(){
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Date input automatically adds "/" and displays an error
+        // when a complete but invalid date is entered.
         OutlinedTextField(value = activityDate,
             onValueChange = { newValue -> activityDate = formatActivityDateInput(newValue) },
             label = { Text("Date") },
@@ -267,6 +286,7 @@ fun AddActivityScreen(){
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Time input uses a numeric keyboard and automatically adds ":".
         OutlinedTextField(value = activityTime,
             onValueChange = { newValue -> activityTime = formatActivityTimeInput(newValue) },
             label = { Text("Time") },
@@ -299,16 +319,17 @@ fun AddActivityScreen(){
 
         Spacer(modifier = Modifier.height(28.dp))
 
+        // Returns the completed activity data to ItineraryActivity.
         Button(onClick = {
-
-                val resultIntent = Intent().apply {
+            // Packages the activity data so ItineraryActivity can receive it.
+            val resultIntent = Intent().apply {
                     putExtra("activityTitle", activityTitle.trim())
                     putExtra("activityDate", activityDate)
                     putExtra("activityTime", activityTime)
                     putExtra("activityNotes", activityNotes.trim())
                 }
-
-                activity?.setResult(Activity.RESULT_OK, resultIntent)
+            // Sends the activity back to the previous screen and closes this screen.
+            activity?.setResult(Activity.RESULT_OK, resultIntent)
                 activity?.finish()
             },
             enabled = canAddActivity,

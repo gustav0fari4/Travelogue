@@ -42,12 +42,15 @@ class PlaceDetailsActivity : ComponentActivity(){
 
         enableEdgeToEdge()
 
+        // Receives the selected place information from PlacesActivity.
         val placeName = intent.getStringExtra("placeName") ?: ""
         val placeCategory = intent.getStringExtra("placeCategory") ?: ""
         val placeCity = intent.getStringExtra("placeCity") ?: ""
         val country = intent.getStringExtra("country") ?: ""
         val placeAddress = intent.getStringExtra("placeAddress") ?: ""
         val placeNotes = intent.getStringExtra("placeNotes") ?: ""
+        // Determines whether the place has already been visited
+        // or is still marked as Want to Visit.
         val placeVisited = intent.getBooleanExtra("placeVisited", false)
 
         setContent {
@@ -66,6 +69,8 @@ class PlaceDetailsActivity : ComponentActivity(){
     }
 }
 
+// Displays the complete information for a selected place,
+// including its status, optional address and notes.
 @Composable
 fun PlaceDetailsScreen(placeName: String,
                       placeCategory: String,
@@ -78,11 +83,14 @@ fun PlaceDetailsScreen(placeName: String,
 
     val activity = LocalActivity.current
 
+    // Shared colours keep the Place Details screen
+    // visually consistent with the rest of Travelogue.
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
     val titleColor = Color(0xFF1D2939)
     val secondaryTextColor = Color(0xFF444444)
 
+    // Main scrollable layout for the Place Details screen.
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -95,6 +103,7 @@ fun PlaceDetailsScreen(placeName: String,
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Returns to the Places screen.
             TextButton(onClick = { activity?.finish() }) {
                 Text(
                     text = "←",
@@ -116,7 +125,7 @@ fun PlaceDetailsScreen(placeName: String,
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // Place title
+        // Displays the main place information and location.
         Text(
             text = placeName,
             color = titleColor,
@@ -143,6 +152,8 @@ fun PlaceDetailsScreen(placeName: String,
 
         Spacer(modifier = Modifier.height(28.dp))
 
+        // Displays the place status together with optional
+        // address and notes when these values are available.
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -161,6 +172,8 @@ fun PlaceDetailsScreen(placeName: String,
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Uses the stored visit status to distinguish between
+                // completed visits and places that are still planned.
                 Text(
                     text = if (placeVisited) {
                         "VISITED"
@@ -176,6 +189,7 @@ fun PlaceDetailsScreen(placeName: String,
                     fontWeight = FontWeight.Bold
                 )
 
+                // Optional information is only displayed when it was provided.
                 if (placeAddress.isNotBlank()) {
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -220,9 +234,11 @@ fun PlaceDetailsScreen(placeName: String,
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Shares the selected place using Android's implicit intent system.
         Button(
             onClick = {
 
+                // Builds a simple text summary containing the place information.
                 val shareText = """
                     $placeName
                     $placeCategory in $placeCity, $country
@@ -230,12 +246,16 @@ fun PlaceDetailsScreen(placeName: String,
                     Saved to my Travelogue trip.
                 """.trimIndent()
 
+                // ACTION_SEND allows any compatible installed application
+                // to receive the place information as plain text.
                 val sendIntent = Intent().apply {
                     action = Intent.ACTION_SEND
                     type = "text/plain"
                     putExtra(Intent.EXTRA_TEXT, shareText)
                 }
 
+                // Opens Android's native sharing interface so the user
+                // can choose which application to share the place with.
                 val chooserIntent = Intent.createChooser(sendIntent, "Share place")
 
                 activity?.startActivity(chooserIntent)
@@ -256,6 +276,8 @@ fun PlaceDetailsScreen(placeName: String,
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Communicates a planned feature without exposing
+        // functionality that is not implemented in this milestone.
         Text(
             text = "Location check-in will be available in a future version.",
             color = secondaryTextColor,
