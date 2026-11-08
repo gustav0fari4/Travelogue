@@ -1,4 +1,5 @@
 🌍 Travelogue
+
 Travelogue is an Android travel planner and journal app built with Kotlin and Jetpack Compose.
 
 The app helps users organize a trip, plan activities, keep track of places, mark activities as visited, and share places with others.
