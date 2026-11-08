@@ -41,8 +41,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import com.griffith.travelogue.ui.theme.TravelogueTheme
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+private const val MINIMUM_TRIP_YEAR = 1900
+private const val MAXIMUM_TRIP_YEAR = 2100
 
 private fun formatTripDateInput(input: String): String {
+
     val digits = input
         .filter { it.isDigit() }
         .take(8)
@@ -55,8 +62,39 @@ private fun formatTripDateInput(input: String): String {
         }
 
         else -> {
-            "${digits.take(2)}/${digits.substring(2, 4)}/${digits.drop(4)}"
+            "${digits.take(2)}/" +
+                    "${digits.substring(2, 4)}/" +
+                    digits.drop(4)
         }
+    }
+}
+
+private fun parseDate(date: String): Date? {
+
+    if (date.length != 10) {
+        return null
+    }
+
+    val year = date.takeLast(4).toIntOrNull()
+
+    if (
+        year == null ||
+        year !in MINIMUM_TRIP_YEAR..MAXIMUM_TRIP_YEAR
+    ) {
+        return null
+    }
+
+    val formatter = SimpleDateFormat(
+        "dd/MM/yyyy",
+        Locale.getDefault()
+    )
+
+    formatter.isLenient = false
+
+    return try {
+        formatter.parse(date)
+    } catch (exception: Exception) {
+        null
     }
 }
 
@@ -84,6 +122,7 @@ fun CreateTripScreen() {
     val primaryBlue = Color(0xFF1565C0)
     val secondaryTextColor = Color(0xFF444444)
     val inputTextColor = Color(0xFF1D2939)
+    val errorColor = Color(0xFFB3261E)
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = inputTextColor,
@@ -98,7 +137,13 @@ fun CreateTripScreen() {
         focusedPlaceholderColor = Color(0xFF777777),
         unfocusedPlaceholderColor = Color(0xFF777777),
 
-        cursorColor = primaryBlue
+        cursorColor = primaryBlue,
+
+        errorTextColor = inputTextColor,
+        errorBorderColor = errorColor,
+        errorCursorColor = errorColor,
+        errorLabelColor = errorColor,
+        errorSupportingTextColor = errorColor
     )
 
     var tripName by remember { mutableStateOf("") }
@@ -108,11 +153,48 @@ fun CreateTripScreen() {
     var endDate by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
+    val startDateParsed = parseDate(startDate)
+    val endDateParsed = parseDate(endDate)
+
+    val startDateIsComplete =
+        startDate.length == 10
+
+    val endDateIsComplete =
+        endDate.length == 10
+
+    val startDateIsValid =
+        startDateIsComplete &&
+                startDateParsed != null
+
+    val endDateIsValid =
+        endDateIsComplete &&
+                endDateParsed != null
+
+    val endDateIsBeforeStartDate =
+        startDateParsed != null &&
+                endDateParsed != null &&
+                endDateParsed.before(startDateParsed)
+
+    val startDateHasError =
+        startDateIsComplete &&
+                !startDateIsValid
+
+    val endDateHasError =
+        endDateIsComplete &&
+                (
+                        !endDateIsValid ||
+                                endDateIsBeforeStartDate
+                        )
+
+    val dateRangeIsValid =
+        startDateIsValid &&
+                endDateIsValid &&
+                !endDateIsBeforeStartDate
+
     val canCreateTrip = tripName.isNotBlank() &&
             country.isNotBlank() &&
             city.isNotBlank() &&
-            startDate.length == 10 &&
-            endDate.length == 10
+            dateRangeIsValid
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -190,8 +272,22 @@ fun CreateTripScreen() {
             onValueChange = { startDate = formatTripDateInput(it) },
             label = { Text("Start Date") },
             placeholder = {Text("DD/MM/YYYY") },
-            supportingText = { Text(text = "Type only the number. The slashes are added automatically.", color = secondaryTextColor)},
-            singleLine = true,
+            supportingText = {
+                if (startDateHasError) {
+                    Text(
+                        text = "Enter a valid date between " +
+                                "$MINIMUM_TRIP_YEAR and " +
+                                "$MAXIMUM_TRIP_YEAR."
+                    )
+                } else {
+                    Text(
+                        text = "Type only the numbers. " +
+                                "The slashes are added automatically.",
+                        color = secondaryTextColor
+                    )
+                }
+            },
+            isError = startDateHasError,            singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
@@ -203,8 +299,32 @@ fun CreateTripScreen() {
             onValueChange = { endDate = formatTripDateInput(it) },
             label = { Text("End Date") },
             placeholder = {Text("DD/MM/YYYY") },
-            supportingText = { Text(text = "Type only the number. The slashes are added automatically.", color = secondaryTextColor)},
-            singleLine = true,
+            supportingText = {
+                when {
+                    endDateIsComplete && !endDateIsValid -> {
+                        Text(
+                            text = "Enter a valid date between " +
+                                    "$MINIMUM_TRIP_YEAR and " +
+                                    "$MAXIMUM_TRIP_YEAR."
+                        )
+                    }
+
+                    endDateIsBeforeStartDate -> {
+                        Text(
+                            text = "End date cannot be before start date."
+                        )
+                    }
+
+                    else -> {
+                        Text(
+                            text = "Type only the numbers. " +
+                                    "The slashes are added automatically.",
+                            color = secondaryTextColor
+                        )
+                    }
+                }
+            },
+            isError = endDateHasError,            singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()

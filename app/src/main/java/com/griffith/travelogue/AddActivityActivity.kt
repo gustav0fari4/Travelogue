@@ -42,6 +42,79 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.griffith.travelogue.ui.theme.TravelogueTheme
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+private const val MINIMUM_ACTIVITY_YEAR = 1900
+private const val MAXIMUM_ACTIVITY_YEAR = 2100
+
+private fun formatActivityDateInput(input: String): String {
+
+    val digits = input
+        .filter { it.isDigit() }
+        .take(8)
+
+    return when {
+        digits.length <= 2 -> digits
+
+        digits.length <= 4 -> {
+            "${digits.take(2)}/${digits.drop(2)}"
+        }
+
+        else -> {
+            "${digits.take(2)}/" +
+                    "${digits.substring(2, 4)}/" +
+                    digits.drop(4)
+        }
+    }
+}
+
+private fun parseActivityDate(date: String): Date? {
+
+    if (date.length != 10) {
+        return null
+    }
+
+    val year = date
+        .takeLast(4)
+        .toIntOrNull()
+
+    if (
+        year == null ||
+        year !in MINIMUM_ACTIVITY_YEAR..MAXIMUM_ACTIVITY_YEAR
+    ) {
+        return null
+    }
+
+    val formatter = SimpleDateFormat(
+        "dd/MM/yyyy",
+        Locale.getDefault()
+    )
+
+    formatter.isLenient = false
+
+    return try {
+        formatter.parse(date)
+    } catch (exception: Exception) {
+        null
+    }
+}
+
+private fun formatActivityTimeInput(input: String): String {
+
+    val digits = input
+        .filter { it.isDigit() }
+        .take(4)
+
+    return when {
+        digits.length <= 2 -> digits
+
+        else -> {
+            "${digits.take(2)}:${digits.drop(2)}"
+        }
+    }
+}
 
 class AddActivityActivity : ComponentActivity() {
 
@@ -58,35 +131,6 @@ class AddActivityActivity : ComponentActivity() {
     }
 }
 
-private fun formatDateInput(input: String): String {
-    val digits = input
-        .filter { it.isDigit() }
-        .take(8)
-
-    return when {
-        digits.length <= 2 -> digits
-
-        digits.length <= 4 -> {"${digits.take(2)}/${digits.drop(2)}"}
-
-        else -> {
-            "${digits.take(2)}/${digits.substring(2, 4)}/${digits.drop(4)}"
-        }
-    }
-}
-
-private fun formatTimeInput(input: String): String {
-    val digits = input
-        .filter { it.isDigit() }
-        .take(4)
-
-    return when {
-        digits.length <= 2 -> digits
-
-        else -> {
-            "${digits.take(2)}:${digits.drop(2)}"
-        }
-    }
-}
 @Composable
 fun AddActivityScreen(){
 
@@ -96,6 +140,7 @@ fun AddActivityScreen(){
     val primaryBlue = Color(0xFF1565C0)
     val secondaryTextColor = Color(0xFF444444)
     val inputTextColor = Color(0xFF1D2939)
+    val errorColor = Color(0xFFB3261E)
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = inputTextColor,
@@ -110,7 +155,13 @@ fun AddActivityScreen(){
         focusedPlaceholderColor = Color(0xFF777777),
         unfocusedPlaceholderColor = Color(0xFF777777),
 
-        cursorColor = primaryBlue
+        cursorColor = primaryBlue,
+
+        errorTextColor = inputTextColor,
+        errorBorderColor = errorColor,
+        errorCursorColor = errorColor,
+        errorLabelColor = errorColor,
+        errorSupportingTextColor = errorColor
     )
 
     var activityTitle by remember { mutableStateOf("") }
@@ -118,9 +169,27 @@ fun AddActivityScreen(){
     var activityTime by remember { mutableStateOf("") }
     var activityNotes by remember { mutableStateOf("") }
 
-    val canAddActivity = activityTitle.isNotBlank() &&
-            activityDate.length == 10 &&
-            activityTime.length == 5
+    val activityDateIsComplete =
+        activityDate.length == 10
+
+    val activityDateParsed =
+        parseActivityDate(activityDate)
+
+    val activityDateIsValid =
+        activityDateIsComplete &&
+                activityDateParsed != null
+
+    val activityDateHasError =
+        activityDateIsComplete &&
+                !activityDateIsValid
+
+    val activityTimeIsComplete =
+        activityTime.length == 5
+
+    val canAddActivity =
+        activityTitle.isNotBlank() &&
+                activityDateIsValid &&
+                activityTimeIsComplete
 
 
     Column(modifier = Modifier.fillMaxSize()
@@ -172,10 +241,25 @@ fun AddActivityScreen(){
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(value = activityDate,
-            onValueChange = { newValue -> activityDate = formatDateInput(newValue) },
+            onValueChange = { newValue -> activityDate = formatActivityDateInput(newValue) },
             label = { Text("Date") },
             placeholder = { Text("DD/MM/YYYY") },
-            supportingText = {Text("Type only the numbers. the slashes are added automatically")},
+            supportingText = {
+                if (activityDateHasError) {
+                    Text(
+                        text = "Enter a valid date between " +
+                                "$MINIMUM_ACTIVITY_YEAR and " +
+                                "$MAXIMUM_ACTIVITY_YEAR."
+                    )
+                } else {
+                    Text(
+                        text = "Type only the numbers. " +
+                                "The slashes are added automatically.",
+                        color = secondaryTextColor
+                    )
+                }
+            },
+            isError = activityDateHasError,
             singleLine = true,
             colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
@@ -184,10 +268,16 @@ fun AddActivityScreen(){
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(value = activityTime,
-            onValueChange = { newValue -> activityTime = formatTimeInput(newValue) },
+            onValueChange = { newValue -> activityTime = formatActivityTimeInput(newValue) },
             label = { Text("Time") },
             placeholder = { Text("e.g. 09:00") },
-            supportingText = {Text("Type only the numbers. the colons are added automatically")},
+            supportingText = {
+                Text(
+                    text = "Type only the numbers. " +
+                            "The colon is added automatically.",
+                    color = secondaryTextColor
+                )
+            },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = textFieldColors,
