@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,6 +58,35 @@ class AddActivityActivity : ComponentActivity() {
     }
 }
 
+private fun formatDateInput(input: String): String {
+    val digits = input
+        .filter { it.isDigit() }
+        .take(8)
+
+    return when {
+        digits.length <= 2 -> digits
+
+        digits.length <= 4 -> {"${digits.take(2)}/${digits.drop(2)}"}
+
+        else -> {
+            "${digits.take(2)}/${digits.substring(2, 4)}/${digits.drop(4)}"
+        }
+    }
+}
+
+private fun formatTimeInput(input: String): String {
+    val digits = input
+        .filter { it.isDigit() }
+        .take(4)
+
+    return when {
+        digits.length <= 2 -> digits
+
+        else -> {
+            "${digits.take(2)}:${digits.drop(2)}"
+        }
+    }
+}
 @Composable
 fun AddActivityScreen(){
 
@@ -63,12 +94,34 @@ fun AddActivityScreen(){
 
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
-    val secondaryTextColor = Color(0xFF667085)
+    val secondaryTextColor = Color(0xFF444444)
+    val inputTextColor = Color(0xFF1D2939)
+
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = inputTextColor,
+        unfocusedTextColor = inputTextColor,
+
+        focusedBorderColor = primaryBlue,
+        unfocusedBorderColor = Color(0xFF7A7A7A),
+
+        focusedLabelColor = primaryBlue,
+        unfocusedLabelColor = secondaryTextColor,
+
+        focusedPlaceholderColor = Color(0xFF777777),
+        unfocusedPlaceholderColor = Color(0xFF777777),
+
+        cursorColor = primaryBlue
+    )
 
     var activityTitle by remember { mutableStateOf("") }
     var activityDate by remember { mutableStateOf("") }
     var activityTime by remember { mutableStateOf("") }
     var activityNotes by remember { mutableStateOf("") }
+
+    val canAddActivity = activityTitle.isNotBlank() &&
+            activityDate.length == 10 &&
+            activityTime.length == 5
+
 
     Column(modifier = Modifier.fillMaxSize()
         .fillMaxSize()
@@ -109,29 +162,35 @@ fun AddActivityScreen(){
         OutlinedTextField(value = activityTitle,
             onValueChange = { activityTitle = it },
             label = { Text("Activity") },
-            placeholder = { Text("e.g. Visit Eiffel Tower") },
+            placeholder = { Text("e.g. Visit Tokyo Tower") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+            colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(value = activityDate,
-            onValueChange = { activityDate = it },
+            onValueChange = { newValue -> activityDate = formatDateInput(newValue) },
             label = { Text("Date") },
             placeholder = { Text("DD/MM/YYYY") },
+            supportingText = {Text("Type only the numbers. the slashes are added automatically")},
             singleLine = true,
+            colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(value = activityTime,
-            onValueChange = { activityTime = it },
+            onValueChange = { newValue -> activityTime = formatTimeInput(newValue) },
             label = { Text("Time") },
             placeholder = { Text("e.g. 09:00") },
+            supportingText = {Text("Type only the numbers. the colons are added automatically")},
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -144,6 +203,7 @@ fun AddActivityScreen(){
             minLines = 3,
             maxLines = 5,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -151,28 +211,22 @@ fun AddActivityScreen(){
 
         Button(onClick = {
 
-            if (
-                activityTitle.isNotBlank() &&
-                activityDate.isNotBlank() &&
-                activityTime.isNotBlank()
-            ) {
-
-                val resultIntent = Intent()
-
-                resultIntent.putExtra("activityTitle", activityTitle)
-                resultIntent.putExtra("activityDate", activityDate)
-                resultIntent.putExtra("activityTime", activityTime)
-                resultIntent.putExtra("activityNotes", activityNotes)
+                val resultIntent = Intent().apply {
+                    putExtra("activityTitle", activityTitle.trim())
+                    putExtra("activityDate", activityDate)
+                    putExtra("activityTime", activityTime)
+                    putExtra("activityNotes", activityNotes.trim())
+                }
 
                 activity?.setResult(Activity.RESULT_OK, resultIntent)
                 activity?.finish()
-            }
-        },
+            },
+            enabled = canAddActivity,
             modifier = Modifier.fillMaxWidth().height(52.dp),
             colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
             shape = RoundedCornerShape(12.dp)
         ){
-            Text(text = "ADD TO ACTIVITY",
+            Text(text = "ADD TO ITINERARY",
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )
@@ -190,7 +244,6 @@ fun AddActivityScreen(){
 @Preview(showBackground = true)
 @Composable
 fun AddActivityScreenPreview(){
-
     TravelogueTheme{
         AddActivityScreen()
     }

@@ -1,6 +1,5 @@
 package com.griffith.travelogue
 
-import android.R.attr.fontWeight
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -49,6 +48,7 @@ class PlaceDetailsActivity : ComponentActivity(){
         val country = intent.getStringExtra("country") ?: ""
         val placeAddress = intent.getStringExtra("placeAddress") ?: ""
         val placeNotes = intent.getStringExtra("placeNotes") ?: ""
+        val placeVisited = intent.getBooleanExtra("placeVisited", false)
 
         setContent {
             TravelogueTheme {
@@ -58,7 +58,8 @@ class PlaceDetailsActivity : ComponentActivity(){
                     placeCity = placeCity,
                     country = country,
                     placeAddress = placeAddress,
-                    placeNotes = placeNotes
+                    placeNotes = placeNotes,
+                    placeVisited = placeVisited
                 )
             }
         }
@@ -71,14 +72,16 @@ fun PlaceDetailsScreen(placeName: String,
                       placeCity: String,
                       country: String,
                       placeAddress: String,
-                      placeNotes: String) {
+                      placeNotes: String,
+                       placeVisited: Boolean
+) {
 
     val activity = LocalActivity.current
 
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
     val titleColor = Color(0xFF1D2939)
-    val secondaryTextColor = Color(0xFF667085)
+    val secondaryTextColor = Color(0xFF444444)
 
     Column(
         modifier = Modifier
@@ -159,8 +162,16 @@ fun PlaceDetailsScreen(placeName: String,
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Want to Visit",
-                    color = primaryBlue,
+                    text = if (placeVisited) {
+                        "VISITED"
+                    } else {
+                        "WANT TO VISIT"
+                    },
+                    color = if (placeVisited) {
+                        Color(0xFF2E7D32)
+                    } else {
+                        primaryBlue
+                    },
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -264,7 +275,8 @@ fun PlaceDetailsScreenPreview() {
             placeCity = "Tokyo",
             country = "Japan",
             placeAddress = "4 Chome-2-4 Shibakoen",
-            placeNotes = "Visit before sunset"
+            placeNotes = "Visit before sunset",
+            placeVisited = false
         )
     }
 }

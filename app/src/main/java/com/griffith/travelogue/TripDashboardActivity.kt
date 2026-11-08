@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,7 +23,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat.enableEdgeToEdge
 import com.griffith.travelogue.ui.theme.TravelogueTheme
 
 class TripDashboardActivity : ComponentActivity() {
@@ -81,7 +78,7 @@ fun TripDashboardScreen(
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
     val titleColor = Color(0xFF1D2939)
-    val secondaryTextColor = Color(0xFF667085)
+    val secondaryTextColor = Color(0xFF444444)
 
     Column(modifier = Modifier.fillMaxSize()
         .background(backgroundColor)
@@ -166,11 +163,13 @@ fun TripDashboardScreen(
 
                 Button(onClick = {
 
-                    val intent = Intent(activity, ItineraryActivity::class.java)
-
-                    intent.putExtra("tripName", tripName)
-                    intent.putExtra("startDate", startDate)
-                    intent.putExtra("endDate", endDate)
+                    val intent = Intent(activity, ItineraryActivity::class.java).apply{
+                        putExtra("tripName", tripName)
+                        putExtra("city", city)
+                        putExtra("country", country)
+                        putExtra("startDate", startDate)
+                        putExtra("endDate", endDate)
+                    }
 
                     activity?.startActivity(intent)
                 },
@@ -267,7 +266,7 @@ fun TripDashboardScreenPreview(){
 
     TravelogueTheme{
         TripDashboardScreen(
-            tripName = "Japan Dream",
+            tripName = "Japan Holiday",
             country = "Japan",
             city = "Tokyo",
             startDate = "11/11/2023",

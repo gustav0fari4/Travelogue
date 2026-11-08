@@ -68,7 +68,7 @@ fun HomeScreen(
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
     val titleColor = Color(0xFF1D2939)
-    val secondaryTextColor = Color(0xFF667085)
+    val secondaryTextColor = Color(0xFF444444)
 
     Box(modifier = Modifier
         .fillMaxSize()

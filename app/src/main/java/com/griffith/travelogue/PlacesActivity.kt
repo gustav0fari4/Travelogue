@@ -1,5 +1,6 @@
 package com.griffith.travelogue
 
+import android.R.attr.country
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
@@ -74,30 +75,42 @@ fun PlacesScreen(tripName:String,
 
     val activity = LocalActivity.current
 
-    var placeName by remember { mutableStateOf("") }
-    var placeCategory by remember { mutableStateOf("") }
-    var placeCity by remember { mutableStateOf("") }
-    var placeAddress by remember { mutableStateOf("") }
-    var placeNotes by remember { mutableStateOf("") }
+    val backgroundColor = Color(0xFFF7F8FA)
+    val primaryBlue = Color(0xFF1565C0)
+    val visitedGreen = Color(0xFF2E7D32)
+    val titleColor = Color(0xFF1D2939)
+    val secondaryTextColor = Color(0xFF444444)
 
-    val addPlaceLauncher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.let { data ->
+    val tripPlaces = TravelogueStore.placesForTrip(tripName)
 
-                    placeName = data.getStringExtra("placeName") ?: ""
-                    placeCategory = data.getStringExtra("placeCategory") ?: ""
-                    placeCity = data.getStringExtra("placeCity") ?: ""
-                    placeAddress = data.getStringExtra("placeAddress") ?: ""
-                    placeNotes = data.getStringExtra("placeNotes") ?: ""
+    val addPlaceLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.let {
+                data ->
+
+
+                val placeName = data.getStringExtra("placeName").orEmpty()
+                val placeCategory = data.getStringExtra("placeCategory").orEmpty()
+                val placeCity = data.getStringExtra("placeCity").orEmpty()
+                val placeAddress = data.getStringExtra("placeAddress").orEmpty()
+                val placeNotes = data.getStringExtra("placeNotes").orEmpty()
+
+                if(placeName.isNotBlank()){
+                    TravelogueStore.addPlace(
+                        TravelPlace(tripName = tripName,
+                            name = placeName,
+                            category = placeCategory,
+                            city = placeCity,
+                            country = country,
+                            address = placeAddress,
+                            notes = placeNotes,
+                            visited = false
+                        )
+                    )
                 }
             }
         }
-
-    val backgroundColor = Color(0xFFF7F8FA)
-    val primaryBlue = Color(0xFF1565C0)
-    val titleColor = Color(0xFF1D2939)
-    val secondaryTextColor = Color(0xFF667085)
+    }
 
     fun openAddPlaceScreen() {
         val intent = Intent(activity, AddPlaceActivity::class.java)
@@ -158,7 +171,7 @@ fun PlacesScreen(tripName:String,
         Spacer(modifier = Modifier.height(36.dp))
 
         Text(
-            text = "PLACES TO VISIT",
+            text = "YOUR PLACES",
             color = titleColor,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold
@@ -166,138 +179,41 @@ fun PlacesScreen(tripName:String,
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (placeName.isBlank()) {
+        if (tripPlaces.isEmpty()) {
             // Empty places state
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "🗺️",
-                        fontSize = 40.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Text(
-                        text = "No places yet",
-                        color = titleColor,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Save the places you want to visit in your trip.",
-                        color = secondaryTextColor,
-                        fontSize = 15.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Button(
-                        onClick = {
-                            openAddPlaceScreen()
-                        },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text = "ADD PLACE",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
+            EmptyPlacesCard(primaryBlue = primaryBlue,
+                titleColor = titleColor,
+                secondaryTextColor = secondaryTextColor,
+                onAddPlace = { openAddPlaceScreen() }
+            )
         } else {
-            // Created place
-            Card(
-                modifier = Modifier.fillMaxWidth()
-                                    .clickable{
-                                        val intent = Intent(activity, PlaceDetailsActivity::class.java)
-                                            intent.putExtra("placeName", placeName)
-                                            intent.putExtra("placeCategory", placeCategory)
-                                            intent.putExtra("placeCity", placeCity)
-                                            intent.putExtra("country", country)
-                                            intent.putExtra("placeAddress", placeAddress)
-                                            intent.putExtra("placeNotes", placeNotes)
-
-                                            activity?.startActivity(intent)
-                                    },
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(22.dp)) {
-                    Text(
-                        text = placeCategory.uppercase(),
-                        color = primaryBlue,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = placeName,
-                        color = titleColor,
-                        fontSize = 21.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Text(
-                        text = placeCity,
-                        color = secondaryTextColor,
-                        fontSize = 14.sp
-                    )
-
-                    if (placeAddress.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Text(
-                            text = placeAddress,
-                            color = secondaryTextColor,
-                            fontSize = 14.sp
-                        )
+            // Existing places
+            tripPlaces.forEach {
+                travelPlace -> PlaceCard(travelPlace = travelPlace,
+                    primaryBlue = primaryBlue,
+                    visitedGreen = visitedGreen,
+                    titleColor = titleColor,
+                    secondaryTextColor = secondaryTextColor,
+                    onOpenPlace = {
+                        val intent = Intent(activity, PlaceDetailsActivity::class.java).apply{
+                                putExtra("placeName", travelPlace.name)
+                                putExtra("placeCategory", travelPlace.category)
+                                putExtra("placeCity", travelPlace.city)
+                                putExtra("country", country)
+                                putExtra("placeAddress", travelPlace.address)
+                                putExtra("placeNotes", travelPlace.notes)
+                                putExtra("placeVisited", travelPlace.visited)
+                        }
+                        activity?.startActivity(intent)
                     }
+                )
 
-                    if (placeNotes.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = placeNotes,
-                            color = secondaryTextColor,
-                            fontSize = 14.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "WANT TO VISIT",
-                        color = primaryBlue,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
             Button(
-                onClick = { openAddPlaceScreen() },
+                onClick = {
+                    openAddPlaceScreen()
+                },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 shape = RoundedCornerShape(12.dp)
@@ -308,6 +224,140 @@ fun PlacesScreen(tripName:String,
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun EmptyPlacesCard(primaryBlue: Color,
+                            titleColor: Color,
+                            secondaryTextColor: Color,
+                            onAddPlace: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+                .padding(18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "📝",
+                fontSize = 40.sp
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = "No places yet",
+                color = titleColor,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Add a place manually or mark an itinerary activity as visited.",
+                color = secondaryTextColor,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = onAddPlace,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "ADD PLACE",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaceCard(travelPlace: TravelPlace,
+                      primaryBlue: Color,
+                      visitedGreen: Color,
+                      titleColor: Color,
+                      secondaryTextColor: Color,
+                      onOpenPlace: () -> Unit){
+    Card(modifier = Modifier.fillMaxWidth().clickable { onOpenPlace() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ){
+        Column(modifier = Modifier.fillMaxWidth().padding(22.dp)) {
+            Text(text = travelPlace.category.uppercase(),
+                color = if (travelPlace.visited){
+                    visitedGreen
+                } else {
+                    primaryBlue
+                },
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(text = travelPlace.name,
+                color = titleColor,
+                fontSize = 21.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(text = travelPlace.city,
+                color = secondaryTextColor,
+                fontSize = 14.sp
+            )
+
+            if(travelPlace.address.isNotBlank()){
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(text = travelPlace.address,
+                    color = secondaryTextColor,
+                    fontSize = 14.sp
+                )
+            }
+
+            if(travelPlace.notes.isNotBlank()){
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(text = travelPlace.notes,
+                    color = secondaryTextColor,
+                    fontSize = 14.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = if(travelPlace.visited){
+                    "VISITED"
+                } else {
+                    "WANT TO VISIT"
+                },
+                color = if(travelPlace.visited){
+                    visitedGreen
+                } else {
+                    primaryBlue
+                },
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold
+            )
+
         }
     }
 }

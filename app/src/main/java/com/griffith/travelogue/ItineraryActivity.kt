@@ -1,7 +1,5 @@
 package com.griffith.travelogue
 
-import android.R.attr.text
-import android.app.ProgressDialog.show
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
@@ -24,9 +22,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardDefaults.shape
-import androidx.compose.material3.CheckboxDefaults.colors
-import androidx.compose.material3.FloatingActionButtonDefaults.elevation
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,10 +38,7 @@ import android.app.Activity
 import android.content.Intent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import com.griffith.travelogue.TravelogueStore.activities
 
 class ItineraryActivity : ComponentActivity(){
 
@@ -56,6 +48,8 @@ class ItineraryActivity : ComponentActivity(){
         enableEdgeToEdge()
 
         val tripName = intent.getStringExtra("tripName") ?: ""
+        val city = intent.getStringExtra("city") ?: ""
+        val country = intent.getStringExtra("country") ?: ""
         val startDate = intent.getStringExtra("startDate") ?: ""
         val endDate = intent.getStringExtra("endDate") ?: ""
 
@@ -63,6 +57,8 @@ class ItineraryActivity : ComponentActivity(){
             TravelogueTheme {
                 ItineraryScreen(
                     tripName = tripName,
+                    city = city,
+                    country = country,
                     startDate = startDate,
                     endDate = endDate
                 )
@@ -73,15 +69,20 @@ class ItineraryActivity : ComponentActivity(){
 
 @Composable
 fun ItineraryScreen(tripName:String,
+                    city:String,
+                    country:String,
                     startDate:String,
                     endDate:String){
 
     val activity = LocalActivity.current
 
-    var activityTitle by remember { mutableStateOf("") }
-    var activityDate by remember { mutableStateOf("") }
-    var activityTime by remember { mutableStateOf("") }
-    var activityNotes by remember { mutableStateOf("") }
+    val backgroundColor = Color(0xFFF7F8FA)
+    val primaryBlue = Color(0xFF1565C0)
+    val visitedGreen = Color(0xFF2E7D32)
+    val titleColor = Color(0xFF1D2939)
+    val secondaryTextColor = Color(0xFF444444)
+
+    val tripActivities = TravelogueStore.activitiesForTrip(tripName)
 
     val addActivityLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
 
@@ -89,18 +90,25 @@ fun ItineraryScreen(tripName:String,
 
             result.data?.let { data ->
 
-                activityTitle = data.getStringExtra("activityTitle") ?: ""
-                activityDate = data.getStringExtra("activityDate") ?: ""
-                activityTime = data.getStringExtra("activityTime") ?: ""
-                activityNotes = data.getStringExtra("activityNotes") ?: ""
+                val title = data.getStringExtra("activityTitle").orEmpty()
+                val date = data.getStringExtra("activityDate").orEmpty()
+                val time = data.getStringExtra("activityTime").orEmpty()
+                val notes = data.getStringExtra("activityNotes").orEmpty()
+
+                if(title.isNotBlank()){
+                    TravelogueStore.addActivity(
+                        TravelActivity(tripName = tripName,
+                        title = title,
+                        date = date,
+                        time = time,
+                        notes = notes,
+                        city = city,
+                        country = country)
+                    )
+                }
             }
         }
     }
-
-    val backgroundColor = Color(0xFFF7F8FA)
-    val primaryBlue = Color(0xFF1565C0)
-    val titleColor = Color(0xFF1D2939)
-    val secondaryTextColor = Color(0xFF667085)
 
     fun openAddActivityScreen(){
         val intent = Intent(activity, AddActivityActivity::class.java)
@@ -162,102 +170,27 @@ fun ItineraryScreen(tripName:String,
         Spacer(modifier = Modifier.height(16.dp))
 
 
-        if(activityTitle.isBlank()){
-            // Empty itinerary
-            Card(modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ){
-                Column(modifier = Modifier.fillMaxWidth().padding(28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
-                    Text(text = "📅",
-                        fontSize = 40.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Text(text = "No activities yet",
-                        color = titleColor,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(text = "Starting building your itinerary by adding activities to your trip.",
-                        color = secondaryTextColor,
-                        fontSize = 15.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Button(onClick = {
-                        openAddActivityScreen()
-                    },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text = "ADD ACTIVITY",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
+        if(activities.isEmpty()){
+            EmptyItineraryCard(primaryBlue = primaryBlue,
+                titleColor = titleColor,
+                secondaryTextColor = secondaryTextColor,
+                onAddActivity = { openAddActivityScreen() }
+            )
         } else {
-            // Created activity
-            Card(modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ){
-                Column(modifier = Modifier.fillMaxWidth().padding(22.dp),){
-                    Text(text = activityDate,
-                        color = primaryBlue,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+            tripActivities.forEach{ travelActivity ->
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(text = activityTime,
-                        color = secondaryTextColor,
-                        fontSize = 14.sp,
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(text = activityTitle,
-                        color = titleColor,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    if(activityNotes.isNotBlank()){
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(text = activityNotes,
-                            color = secondaryTextColor,
-                            fontSize = 14.sp
-                        )
+                ActivityCard(travelActivity = travelActivity,
+                    primaryBlue = primaryBlue,
+                    visitedGreen = visitedGreen,
+                    titleColor = titleColor,
+                    secondaryTextColor = secondaryTextColor,
+                    onMarkAsVisited = {
+                        TravelogueStore.markActivityAsVisited(travelActivity.id)
                     }
+                )
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(text= "PLANNED",
-                        color = primaryBlue,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
 
             Button(onClick = {
                 openAddActivityScreen()
@@ -275,13 +208,151 @@ fun ItineraryScreen(tripName:String,
     }
 }
 
+@Composable
+private fun EmptyItineraryCard(primaryBlue: Color,
+                                titleColor: Color,
+                                secondaryTextColor: Color,
+                                onAddActivity: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+                .padding(18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Text(
+                text = "📝",
+                fontSize = 40.sp
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = "No activities yet",
+                color = titleColor,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Start building your itinerary by adding activities to your trip.",
+                color = secondaryTextColor,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = onAddActivity,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "+ ADD ACTIVITY",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActivityCard(travelActivity: TravelActivity,
+                         primaryBlue: Color,
+                         visitedGreen: Color,
+                         titleColor: Color,
+                         secondaryTextColor: Color,
+                         onMarkAsVisited: () -> Unit) {
+    val isVisited = travelActivity.status == ActivityStatus.VISITED
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(22.dp)) {
+            Text(
+                text = travelActivity.date,
+                color = if (isVisited) visitedGreen else primaryBlue,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = travelActivity.time,
+                color = secondaryTextColor,
+                fontSize = 14.sp,
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = travelActivity.title,
+                color = titleColor,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (travelActivity.notes.isNotBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = travelActivity.notes,
+                    color = secondaryTextColor,
+                    fontSize = 14.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = travelActivity.status.name,
+                color = if (isVisited) visitedGreen else primaryBlue,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (!isVisited){
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = onMarkAsVisited,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                    shape = RoundedCornerShape(12.dp)
+                ){
+                    Text(text = "MARK AS VISITED",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun ItineraryScreenPreview(){
 
     TravelogueTheme{
         ItineraryScreen(
-            tripName = "Japan Dream",
+            tripName = "Japan Holiday",
+            city = "Tokyo",
+            country = "Japan",
             startDate = "11/11/2023",
             endDate = "26/11/2023"
         )

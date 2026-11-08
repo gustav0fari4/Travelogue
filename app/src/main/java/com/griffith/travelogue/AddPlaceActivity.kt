@@ -1,6 +1,5 @@
 package com.griffith.travelogue
 
-import android.R.attr.singleLine
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.InputTransformation.Companion.keyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -41,6 +39,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import com.griffith.travelogue.ui.theme.TravelogueTheme
 
 class AddPlaceActivity : ComponentActivity(){
@@ -67,7 +66,24 @@ fun AddPlaceScreen(defaultCity: String){
 
     val backgroundColor = Color(0xFFF7F8FA)
     val primaryBlue = Color(0xFF1565C0)
-    val secondaryTextColor = Color(0xFF667085)
+    val secondaryTextColor = Color(0xFF444444)
+    val inputTextColor = Color(0xFF1D2939)
+
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = inputTextColor,
+        unfocusedTextColor = inputTextColor,
+
+        focusedBorderColor = primaryBlue,
+        unfocusedBorderColor = Color(0xFF7A7A7A),
+
+        focusedLabelColor = primaryBlue,
+        unfocusedLabelColor = secondaryTextColor,
+
+        focusedPlaceholderColor = Color(0xFF777777),
+        unfocusedPlaceholderColor = Color(0xFF777777),
+
+        cursorColor = primaryBlue
+    )
 
     var placeName by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
@@ -116,6 +132,7 @@ fun AddPlaceScreen(defaultCity: String){
             placeholder = { Text("e.g. Tokyo Tower") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+            colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -127,6 +144,7 @@ fun AddPlaceScreen(defaultCity: String){
             placeholder = { Text("e.g. Attraction") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+            colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -138,6 +156,7 @@ fun AddPlaceScreen(defaultCity: String){
             placeholder = { Text("e.g. Tokyo") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+            colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -149,6 +168,7 @@ fun AddPlaceScreen(defaultCity: String){
             placeholder = { Text("e.g. 4 Chome-2-4 Shibakoen") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+            colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -161,6 +181,7 @@ fun AddPlaceScreen(defaultCity: String){
             minLines = 3,
             maxLines = 5,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            colors = textFieldColors,
             modifier = Modifier.fillMaxWidth()
         )
 
